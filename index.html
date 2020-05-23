@@ -1,50 +1,261 @@
 <!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<link rel="stylesheet" href="css/reset.css">
-		<link rel="stylesheet" href="css/reveal.css">
-		<link rel="stylesheet" href="css/theme/black.css">
+	<title>reveal.js</title>
 
-		<!-- Theme used for syntax highlighting of code -->
-		<link rel="stylesheet" href="lib/css/monokai.css">
+	<link rel="stylesheet" href="css/reset.css">
+	<link rel="stylesheet" href="css/reveal.css">
+	<link rel="stylesheet" href="css/theme/moon.css">
 
-		<!-- Printing and PDF exports -->
-		<script>
-			var link = document.createElement( 'link' );
-			link.rel = 'stylesheet';
-			link.type = 'text/css';
-			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
-			document.getElementsByTagName( 'head' )[0].appendChild( link );
-		</script>
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
-			</div>
+	<!-- Theme used for syntax highlighting of code -->
+	<link rel="stylesheet" href="lib/css/monokai.css">
+
+	<!-- Printing and PDF exports -->
+	<script>
+		var link = document.createElement('link');
+		link.rel = 'stylesheet';
+		link.type = 'text/css';
+		link.href = window.location.search.match(/print-pdf/gi) ? 'css/print/pdf.css' : 'css/print/paper.css';
+		document.getElementsByTagName('head')[0].appendChild(link);
+	</script>
+</head>
+
+<body>
+	<div class="reveal">
+		<div class="slides">
+			<section>
+				<h1 style="text-align: left;">how browser renders page</h1>
+				<p style="text-align: left;">Alexandr Kryzhny</p>
+				<aside class="notes">
+					<p>Hello, I'm Alex and today we going to talk about how browser render pages.</p>
+					<p>It's important, because when you’re building web apps, you don’t just write isolated JavaScript code that
+						runs on its own.
+						JavaScript you write is interacting with the environment. Understanding this environment, how it works
+						and
+						what it is composed of will allow you to build better apps and be well-prepared for potential issues that
+						might arise once your apps are released.</p>
+				</aside>
+			</section>
+			<section>
+				<h3>Browser main components</h3>
+				<img src="/img/img1.png" style="border: none; box-shadow: none;" />
+				<aside class="notes">
+					<p>So, let’s see what the browser main components are:</p>
+					<ul>
+						<li>User interface: this includes address bar, back and forward buttons, bookmarking menu, etc. In
+							essence, this is every part of the browser display except for the window where you see the web page
+							itself.</li>
+						<br />
+						<li>Browser engine: it handles interactions between user interface and rendering engine</li>
+						<br />
+						<li>Rendering engine: it’s responsible for displaying web page. Rendering engine parses HTML and
+							CSS and displays the parsed content on the screen.</li>
+						<br />
+						<li>Networking: these are network calls such as XHR requests, and, generally, browser communication with
+							the rest of internet, including proxying, caching, and so on. </li>
+						<br />
+						<li>UI backend: it’s used for drawing core widgets such as checkboxes and windows. This backend exposes
+							a
+							generic interface that is not platform-specific. It uses operating system UI methods underneath.</li>
+						<br />
+						<li>JavaScript engine: this is where JavaScript code gets parsed and executed.</li>
+						<br />
+						<li>Data persistence: if your app might need to store data locally, it can use different types of
+							storage
+							mechanisms, include localStorage, indexDB, WebSQL and FileSystem.</li>
+					</ul>
+					<p>In this talk, we’re going to focus on rendering engine, since it is handling parsing and visualization of
+						HTML and CSS, which is something that most JavaScript apps are constantly
+						interacting
+						with.</p>
+				</aside>
+			</section>
+			<section>
+				<h3>Constructing the DOM tree</h3>
+				<img src="/img/img2.png" style="border: none; box-shadow: none;" />
+				<aside class="notes">
+					<p>Rendering engine receives contents of requested document from networking layer.</p>
+					<p>First step of rendering engine is parsing the HTML document and converting the parsed elements to
+						actual DOM nodes in a DOM tree.</p>
+					<p>Imagine you have the following textual input, like on the left</p>
+					<p>The DOM tree for this HTML will look like the one on the right</p>
+					<p>Basically, each element is represented as the parent node to all of the elements, which are directly
+						contained inside of it. And this is applied recursively.</p>
+				</aside>
+			</section>
+			<section>
+				<h3>Constructing the CSSOM tree</h3>
+				<img src="/img/img3.png" style="border: none; box-shadow: none;" />
+				<aside class="notes">
+					<p>Next step is Constructing CSSOM tree</p>
+					<br />
+					<p>CSSOM refers to CSS Object Model. While browser was constructing DOM of the page, it
+						runs upon a link tag in head section which was referencing external CSS style sheet.
+						Expecting that it might need that resource to render page, it immediately dispatched a request for
+						it. Let’s imagine that CSS file has the contents like on this slide</p>
+					<br />
+					<p>As with the HTML, engine needs to convert CSS into something that browser can work with — the
+						CSSOM. Here you can see how CSSOM tree will look like:</p>
+					<br />
+					<p>You may ask, why does CSSOM have a tree structure? When computing the final set of styles for any
+						object on page, browser starts with the most general rule applicable to that node (for example, if
+						it is a child of a body element, then all body styles apply) and then recursively refines computed
+						styles by applying more specific rules.</p>
+					<br />
+					<p>Let’s work with specific example that we gave. Any text contained within a span tag that is placed
+						within body element, has a font size of 16 pixels and has a red color. Those styles are inherited from
+						body element. If a span element is a child of a p element, then its contents are not displayed due to
+						more specific styles that are being applied to it.</p>
+					<br />
+					<p>Also, note that above tree is not complete CSSOM tree and only shows styles we decided to
+						override in our style sheet. Every browser provides a default set of styles also known as “user agent
+						styles” — that’s what we see when we don’t explicitly provide any. Our styles simply override these
+						defaults.</p>
+				</aside>
+			</section>
+			<section>
+				<h3>Constructing render tree</h3>
+				<img src="/img/img4.png" style="border: none; box-shadow: none;" />
+				<aside class="notes">
+					<p>Visual instructions in HTML, combined with styling data from CSSOM tree, are being used to
+						create a render tree.</p>
+					<p>What is a render tree? This is a tree of visual elements constructed in order in which
+						they will be displayed on the screen. It is the visual representation of HTML along with corresponding CSS.
+						The purpose of this tree is to enable painting contents in their correct order.</p>
+					<p>Each node in render tree is known as a renderer or a render object in Webkit.</p>
+					<p>You can see how render tree of the above DOM and CSSOM trees will look like</p>
+					<p>To construct render tree, browser does roughly the following:</p>
+					<ul>
+						<li>Starting at the root of DOM tree, it moves through each visible node. Some nodes are not visible
+							(for
+							example, script tags, meta tags, and so on), and are omitted since they are not reflected in rendered
+							output. Some nodes are hidden via CSS and are also omitted from render tree. For example, span
+							node — in the example above it’s not present in the render tree because we have an explicit rule that sets
+							display: none property on it.</li>
+						<li>For each visible node, browser finds the appropriate matching CSSOM rules and applies them.</li>
+						<li>It emits visible nodes with content and their computed styles</li>
+					</ul>
+					<p>Each renderer represents a rectangular area usually corresponding to a node’s CSS box. It includes
+						geometric info such as width, height, and position.</p>
+				</aside>
+			</section>
+			<section>
+				<h3>Layout and Painting the render tree</h3>
+				<img src="/img/img5.png" style="border: none; box-shadow: none;" />
+				<aside class="notes">
+					<p>When renderer is created and added to tree, it does not have a position and size. Calculating these
+						values is called layout.</p>
+					<p>HTML uses a flow-based layout model, meaning that most of time it can compute geometry in a single
+						pass.</p>
+					<p>Layout is a recursive process — it begins at root renderer, which corresponds to &lthtml&gt
+						element of
+						HTML document. Layout continues recursively through a part or entire renderer hierarchy, computing
+						geometric info for each renderer that requires it.</p>
+					<p>
+						Starting layout process means giving each node exact coordinates where it should appear on screen.
+					</p>
+					<h3>Next stage is Painting render tree</h3>
+					<p>In this stage, renderer tree is traversed and renderer’s paint() method is called to display content on
+						screen.</p>
+					<p>Painting can be global or incremental (similar to layout):</p>
+					<ul>
+						<li>Global — it is when entire tree gets repainted, and</li>
+						<li>Incremental — it's when only some of renderers change in a way that does not affect entire tree.
+							renderer invalidates its rectangle on screen. This causes OS to see it as a region that needs
+							repainting and to generate a paint event. Operating System does it in a smart way by merging several
+							regions into
+							one.</li>
+					</ul>
+					<p>In general, it’s important to understand that painting is a gradual process. For better UX, rendering
+						engine will try to display contents on screen as soon as possible. It will not wait until all the
+						HTML is parsed to start building and laying out render tree. Parts of content will be parsed and
+						displayed, while process continues with rest of content items that keep coming from network.
+					</p>
+				</aside>
+			</section>
+			<section>
+				<h3>Optimizing the rendering performance</h3>
+				<ul>
+					<li class="fragment">JavaScript</li>
+					<li class="fragment">Style calculations</li>
+					<li class="fragment">Layout</li>
+					<li class="fragment">Paint</li>
+				</ul>
+				<aside class="notes">
+					<p>Now, let's talk about how can you optimize your application.</p>
+					<p>If you’d like to optimize your app, there are four major areas that you need to focus on. These are
+						areas over which you have control:</p>
+					<ul>
+						<li>First is JavaScript. - When it comes to rendering, we need to think about the way your JavaScript code
+							will
+							interact with DOM elements on page. JavaScript can create lots of changes in UI, especially in
+							SPAs.</li>
+						<li>Next one is style calculations - Modifying DOM through adding and removing elements, changing
+							attributes, etc.
+							will make th browser recalculate element styles and, in many cases, layout of entire page or at
+							least a part of it.
+							<p>To optimize rendering, you can do following:</p>
+							<ul>
+								<li>Reduce complexity of your selectors. Selector complexity can take more than 50% of time
+									needed to calculate styles for an element, compared to rest of the work which is constructing
+									the style itself.</li>
+								<li>Reduce number of elements on which style calculation must happen. In essence, make style changes
+									to a few elements directly rather than invalidating page as a whole.</li>
+							</ul>
+						</li>
+						<li>Next area is Layout. Layout re-calculations can be very heavy for You can:
+							<ul>
+								<li>Reduce number of layouts whenever possible. When you change styles, browser checks if
+									any of changes require layout to be re-calculated. Changes to properties such as width,
+									height, left, top, and in general, properties related to geometry, require layout. So, avoid changing
+									them as much as possible.</li>
+								<li>Use flexbox over older layout models whenever possible. It works faster and can create a huge
+									performance advantage for your app.</li>
+							</ul>
+						</li>
+						<li>Last ares is Paint. This often is the longest-running of all tasks so it’s important to avoid it as
+							much as
+							possible. Here is what we can do:
+							<ul>
+								<li>Changing any property other than transforms or opacity triggers a paint. Use it sparingly.</li>
+								<li>If you trigger a layout, you will also trigger a paint, since changing geometry results in a
+									visual change of the element, so you should think twice before using it.</li>
+							</ul>
+						</li>
+					</ul>
+				</aside>
+			</section>
+			<section>
+				<h1>Thank you</h1>
+				<a href="mailto:alex.kryzhny@mail.ru" style="display: block;">alex.kryzhny@mail.ru</a>
+				<a href="https://github.com/MetaVII" style="display: block;">github.com/MetaVII</a>
+				<aside class="notes">
+					<p>So, I hope today's talk will help you design better optimized web apps, thank you for watching, bye.</p>
+				</aside>
+			</section>
 		</div>
+	</div>
 
-		<script src="js/reveal.js"></script>
+	<script src="js/reveal.js"></script>
 
-		<script>
-			// More info about config & dependencies:
-			// - https://github.com/hakimel/reveal.js#configuration
-			// - https://github.com/hakimel/reveal.js#dependencies
-			Reveal.initialize({
-				hash: true,
-				dependencies: [
-					{ src: 'plugin/markdown/marked.js' },
-					{ src: 'plugin/markdown/markdown.js' },
-					{ src: 'plugin/highlight/highlight.js' },
-					{ src: 'plugin/notes/notes.js', async: true }
-				]
-			});
-		</script>
-	</body>
+	<script>
+		// More info about config & dependencies:
+		// - https://github.com/hakimel/reveal.js#configuration
+		// - https://github.com/hakimel/reveal.js#dependencies
+		Reveal.initialize({
+			hash: true,
+			dependencies: [
+				{ src: 'plugin/markdown/marked.js' },
+				{ src: 'plugin/markdown/markdown.js' },
+				{ src: 'plugin/highlight/highlight.js' },
+				{ src: 'plugin/notes/notes.js', async: true }
+			]
+		});
+	</script>
+</body>
+
 </html>
